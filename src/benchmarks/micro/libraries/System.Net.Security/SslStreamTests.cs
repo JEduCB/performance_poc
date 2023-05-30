@@ -96,6 +96,8 @@ namespace System.Net.Security.Tests
             _serverIPv6.Dispose();
             _clientPipe.Dispose();
             _serverPipe.Dispose();
+
+            ConcurrentObjectProvider.Cleanup();
         }
 
         [Benchmark]
