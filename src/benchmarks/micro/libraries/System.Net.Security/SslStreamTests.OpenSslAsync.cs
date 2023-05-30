@@ -301,6 +301,8 @@ namespace System.Net.Security.Tests
 
         private const string _pipeName = "ConcurrentTlsHandshakePipe";
 
+        private static int pipeCount = 0;
+
         static ConcurrentObjectProvider()
         {
             _listenerIPv4 = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -342,14 +344,18 @@ namespace System.Net.Security.Tests
             return new Tuple<NetworkStream, NetworkStream>(clientIPv6, serverIPv6);
         }
 
-        public static Tuple<NamedPipeClientStream, NamedPipeServerStream> CreatePipePair()
+        public static Tuple<PipeStream, PipeStream> CreatePipePair()
         {
+            var pipe = _pipeName + pipeCount++;
+
             var pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
                                     PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
             
-            var pipeClient = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.WriteThrough);         
+            var pipeClient = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
 
-            return new Tuple<NamedPipeClientStream, NamedPipeServerStream>(pipeClient, pipeServer);
+            Task.WaitAll(pipeServer.WaitForConnectionAsync(), pipeClient.ConnectAsync());
+
+            return new Tuple<PipeStream, PipeStream>(pipeClient, pipeServer);
         }
 
         public static void Cleanup()
