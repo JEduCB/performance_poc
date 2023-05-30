@@ -14,8 +14,8 @@
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <EnableXlfLocalization>false</EnableXlfLocalization>
-    <LangVersion>latest</LangVersion>
+    <EnableXlfLocalization>false</EnableXlfLocalization>    
+    <LangVersion>10.0</LangVersion>
 
     <!-- Allow building with one major version, and running using a sdk with a higher major version -->
     <RollForward Condition="'$(BuildingForWasm)' == 'true'">LatestMajor</RollForward>
@@ -24,9 +24,16 @@
 
   <!-- out-of-band packages that are not included in NetCoreApp have TFM-specific versions -->
   <Choose>
+    <When Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+        <PropertyGroup>
+            <ExtensionsVersion>3.1.22</ExtensionsVersion>
+            <SystemVersion>4.7.1</SystemVersion>
+            <!-- this repo needs to build with netcoreapp3.1, so we can't use latest C# syntax -->
+            <LangVersion>8.0</LangVersion>
+        </PropertyGroup>
+    </When>
     <When Condition="'$(TargetFramework)' == 'net6.0'">
         <PropertyGroup>
-            <LangVersion>10.0</LangVersion>
             <ExtensionsVersion>6.0.0</ExtensionsVersion>
             <SystemVersion>6.0.0</SystemVersion>
         </PropertyGroup>
