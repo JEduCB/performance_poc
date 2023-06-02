@@ -5,6 +5,7 @@
 using System;  
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -19,115 +20,125 @@ namespace System.Net.Security.Tests
 {
     public partial class SslStreamTests
     {
-        private const int ConcurrentTasks = 200;
-        private const int ConcurrentPipeHandshakeTasks = 50;
+        //Total handshakes will be NumRequests * ConcurrentTasks
+        private const int NumRequests = 100;
+        private const int ConcurrentTasks = 100;
 
-        [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultHandshakeIPv4Async() => Spawn(ConcurrentTasks, async () =>
-        {
-            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
-            await DefaultHandshake(client, server);
-            client.Dispose();
-            server.Dispose();
-        });
+        // [Benchmark]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // public Task ConcurrentDefaultHandshakeIPv4Async() => Spawn(ConcurrentTasks, async () =>
+        // {
+        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
+        //     await DefaultHandshake(client, server);
+        //     client.Dispose();
+        //     server.Dispose();
+        // });
 
-        [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultHandshakeIPv6Async() => Spawn(ConcurrentTasks, async () =>
-        {
-            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
-            await DefaultHandshake(client, server);
-            client.Dispose();
-            server.Dispose();
-        });
+        // [Benchmark]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // public Task ConcurrentDefaultHandshakeIPv6Async() => Spawn(ConcurrentTasks, async () =>
+        // {
+        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
+        //     await DefaultHandshake(client, server);
+        //     client.Dispose();
+        //     server.Dispose();
+        // });
 
-        [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultMutualHandshakeIPv4Async() => Spawn(ConcurrentTasks, async () =>
-        {
-            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
-            await DefaultHandshake(client, server, requireClientCert: true);
-            client.Dispose();
-            server.Dispose();
-        });
+        // [Benchmark]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // public Task ConcurrentDefaultMutualHandshakeIPv4Async() => Spawn(ConcurrentTasks, async () =>
+        // {
+        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
+        //     await DefaultHandshake(client, server, requireClientCert: true);
+        //     client.Dispose();
+        //     server.Dispose();
+        // });
 
-        [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultMutualHandshakeIPv6Async() => Spawn(ConcurrentTasks, async () =>
-        {
-            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
-            await DefaultHandshake(client, server, requireClientCert: true);
-            client.Dispose();
-            server.Dispose();
-        });
+        // [Benchmark]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // public Task ConcurrentDefaultMutualHandshakeIPv6Async() => Spawn(ConcurrentTasks, async () =>
+        // {
+        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
+        //     await DefaultHandshake(client, server, requireClientCert: true);
+        //     client.Dispose();
+        //     server.Dispose();
+        // });
         
-        [Benchmark]
-        [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultHandshakePipeAsync() => Spawn(ConcurrentPipeHandshakeTasks, async () =>
-        {
-            (PipeStream client, PipeStream server) = ConcurrentObjectProvider.CreatePipePair();
-            await DefaultHandshake(client, server);
-            client.Dispose();
-            server.Dispose();
-        });
+        // [Benchmark]
+        // [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // public Task ConcurrentDefaultHandshakePipeAsync() => Spawn(ConcurrentPipeHandshakeTasks, async () =>
+        // {
+        //     (PipeStream client, PipeStream server) = ConcurrentObjectProvider.CreatePipePair();
+        //     await DefaultHandshake(client, server);
+        //     client.Dispose();
+        //     server.Dispose();
+        // });
 
-        [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultHandshakeContextIPv4Async() => Spawn(ConcurrentTasks, async () =>
-        {
-            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
-            await DefaultContextHandshake(client, server);
-            client.Dispose();
-            server.Dispose();
-        });
+        // [Benchmark]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // public Task ConcurrentDefaultHandshakeContextIPv4Async() => Spawn(ConcurrentTasks, async () =>
+        // {
+        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
+        //     await DefaultContextHandshake(client, server);
+        //     client.Dispose();
+        //     server.Dispose();
+        // });
 
-        [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultHandshakeContextIPv6Async() => Spawn(ConcurrentTasks, async () =>
-        {
-            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
-            await DefaultContextHandshake(client, server);
-            client.Dispose();
-            server.Dispose();
-        });
+        // [Benchmark]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // public Task ConcurrentDefaultHandshakeContextIPv6Async() => Spawn(ConcurrentTasks, async () =>
+        // {
+        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
+        //     await DefaultContextHandshake(client, server);
+        //     client.Dispose();
+        //     server.Dispose();
+        // });
         
-        [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        [ArgumentsSource(nameof(TlsProtocols))]
-        public Task ConcurrentHandshakeContosoAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._cert, protocol));
+        // [Benchmark]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // [ArgumentsSource(nameof(TlsProtocols))]
+        // public Task ConcurrentHandshakeContosoAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._cert, protocol));
+
+        // [Benchmark]
+        // [ArgumentsSource(nameof(TlsProtocols))]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // public Task ConcurrentHandshakeECDSA256CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._ec256Cert, protocol));
+
+        // [Benchmark]
+        // [ArgumentsSource(nameof(TlsProtocols))]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
+        // public Task ConcurrentHandshakeECDSA512CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._ec512Cert, protocol));
+
+        // [Benchmark]
+        // [ArgumentsSource(nameof(TlsProtocols))]
+        // [BenchmarkCategory(Categories.NoAOT)]
+        // public Task ConcurrentHandshakeRSA2048CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._rsa2048Cert, protocol));
 
         [Benchmark]
         [ArgumentsSource(nameof(TlsProtocols))]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentHandshakeECDSA256CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._ec256Cert, protocol));
-
-        [Benchmark]
-        [ArgumentsSource(nameof(TlsProtocols))]
-        [BenchmarkCategory(Categories.NoAOT)]
-        [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
-        public Task ConcurrentHandshakeECDSA512CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._ec512Cert, protocol));
-
-        [Benchmark]
-        [ArgumentsSource(nameof(TlsProtocols))]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentHandshakeRSA2048CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._rsa2048Cert, protocol));
-
-        [Benchmark]
-        [ArgumentsSource(nameof(TlsProtocols))]
-        public Task ConcurrentHandshakeRSA4096CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._rsa4096Cert, protocol));
-
-        private static async Task Spawn(int count, Func<Task> method)
+        public Task ConcurrentHandshakeRSA4096CertAsync(SslProtocols protocol) => Spawn(NumRequests, ConcurrentTasks, async () =>
         {
-            var _tasks = new Collections.Generic.List<Task>(count);
+            await Task.Yield();
+            await HandshakeAsync(SslStreamTests._rsa4096Cert, protocol);
+        });
 
-            for(int i = 0; i < count; ++i)
+        private static async Task Spawn(int numRequests, int concurrentTasks, Func<Task> method)
+        {
+            var _tasks = new Collections.Generic.List<Func<Task>>(concurrentTasks);
+
+            for(int j = 0; j < numRequests; ++j)
             {
-                _tasks.Add(Task.Run(method));
-            }
+                for(int i = 0; i < concurrentTasks; ++i)
+                {
+                    _tasks.Add(method);
+                }
 
-            await Task.WhenAll(_tasks);
+                await Task.WhenAll(_tasks.AsParallel().Select(async task => await task()));
+
+                _tasks.Clear();
+            }
         }
     }
 
