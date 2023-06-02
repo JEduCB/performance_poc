@@ -259,7 +259,7 @@ namespace System.Net.Security.Tests
                 ClientCertificates = requireClientCert ? new X509CertificateCollection() { _clientCert } : null,
             };
 
-            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
+            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839 
             //it should be ok to reuse the certificate in multiple threads.
             SslServerAuthenticationOptions serverOptions = new SslServerAuthenticationOptions
             {
