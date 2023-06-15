@@ -175,13 +175,13 @@ namespace System.Net.Security.Tests
             await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
-            await HandshakeAsync(_ec512Cert, protocol);
+            await HandshakeAsync(SslStreamTests._cert, protocol);
         });
 
         [Benchmark]
-        [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        public Task HandshakeRSA2048CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentHandshakeECDSA256CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
@@ -301,8 +301,6 @@ namespace System.Net.Security.Tests
 
         private const string _pipeName = "ConcurrentTlsHandshakePipe";
 
-        private static int pipeCount = 0;
-
         static ConcurrentObjectProvider()
         {
             _listenerIPv4 = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -344,18 +342,14 @@ namespace System.Net.Security.Tests
             return new Tuple<NetworkStream, NetworkStream>(clientIPv6, serverIPv6);
         }
 
-        public static Tuple<PipeStream, PipeStream> CreatePipePair()
+        public static Tuple<NamedPipeClientStream, NamedPipeServerStream> CreatePipePair()
         {
-            var pipe = _pipeName + pipeCount++;
-
             var pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
                                     PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
             
-            var pipeClient = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
+            var pipeClient = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.WriteThrough);         
 
-            Task.WaitAll(pipeServer.WaitForConnectionAsync(), pipeClient.ConnectAsync());
-
-            return new Tuple<PipeStream, PipeStream>(pipeClient, pipeServer);
+            return new Tuple<NamedPipeClientStream, NamedPipeServerStream>(pipeClient, pipeServer);
         }
 
         public static void Cleanup()
