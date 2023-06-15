@@ -20,126 +20,240 @@ namespace System.Net.Security.Tests
 {
     public partial class SslStreamTests
     {
-        //Total handshakes will be NumRequests * ConcurrentTasks
-        private const int NumRequests = 100;
-        private const int ConcurrentTasks = 100;
+        //Total handshakes will be IterationsCount * ConcurrentTasks
+        private const int IterationsCount = 100;
+        private const int ConcurrentTasks = 500;
+        private const int ConcurrentIpTasks = 250;
+        private const int ConcurrentContextTasks = 750;
+        private SslStreamCertificateContext _certContext = SslStreamCertificateContext.Create(Test.Common.Configuration.Certificates.GetServerCertificate(), null);
 
-        // [Benchmark]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // public Task ConcurrentDefaultHandshakeIPv4Async() => Spawn(ConcurrentTasks, async () =>
-        // {
-        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
-        //     await DefaultHandshake(client, server);
-        //     client.Dispose();
-        //     server.Dispose();
-        // });
+        [Benchmark]
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentDefaultHandshakeIPv4Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        {
+            await Task.Yield();
+            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
+            await ConcurrentDefaultHandshake(client, server);
+            client.Dispose();
+            server.Dispose();
+        });
 
-        // [Benchmark]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // public Task ConcurrentDefaultHandshakeIPv6Async() => Spawn(ConcurrentTasks, async () =>
-        // {
-        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
-        //     await DefaultHandshake(client, server);
-        //     client.Dispose();
-        //     server.Dispose();
-        // });
+        [Benchmark]
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentDefaultHandshakeIPv6Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        {
+            await Task.Yield();
+            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
+            await ConcurrentDefaultHandshake(client, server);
+            client.Dispose();
+            server.Dispose();
+        });
 
-        // [Benchmark]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // public Task ConcurrentDefaultMutualHandshakeIPv4Async() => Spawn(ConcurrentTasks, async () =>
-        // {
-        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
-        //     await DefaultHandshake(client, server, requireClientCert: true);
-        //     client.Dispose();
-        //     server.Dispose();
-        // });
+        [Benchmark]
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentDefaultMutualHandshakeIPv4Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        {
+            await Task.Yield();
+            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
+            await ConcurrentDefaultHandshake(client, server, requireClientCert: true);
+            client.Dispose();
+            server.Dispose();
+        });
 
-        // [Benchmark]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // public Task ConcurrentDefaultMutualHandshakeIPv6Async() => Spawn(ConcurrentTasks, async () =>
-        // {
-        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
-        //     await DefaultHandshake(client, server, requireClientCert: true);
-        //     client.Dispose();
-        //     server.Dispose();
-        // });
+        [Benchmark]
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentDefaultMutualHandshakeIPv6Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        {
+            await Task.Yield();
+            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
+            await ConcurrentDefaultHandshake(client, server, requireClientCert: true);
+            client.Dispose();
+            server.Dispose();
+        });
         
-        // [Benchmark]
-        // [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // public Task ConcurrentDefaultHandshakePipeAsync() => Spawn(ConcurrentPipeHandshakeTasks, async () =>
-        // {
-        //     (PipeStream client, PipeStream server) = ConcurrentObjectProvider.CreatePipePair();
-        //     await DefaultHandshake(client, server);
-        //     client.Dispose();
-        //     server.Dispose();
-        // });
+        [Benchmark]
+        [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentDefaultHandshakePipeAsync() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        {
+            await Task.Yield();
+            (NamedPipeClientStream client, NamedPipeServerStream server) = ConcurrentObjectProvider.CreatePipePair();
+            await Task.WhenAll(server.WaitForConnectionAsync(), client.ConnectAsync());
+            await ConcurrentDefaultHandshake(client, server);
+            client.Dispose();
+            server.Dispose();
+        });
 
-        // [Benchmark]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // public Task ConcurrentDefaultHandshakeContextIPv4Async() => Spawn(ConcurrentTasks, async () =>
-        // {
-        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
-        //     await DefaultContextHandshake(client, server);
-        //     client.Dispose();
-        //     server.Dispose();
-        // });
+        [Benchmark]
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentDefaultHandshakeContextIPv4Async() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        {
+            await Task.Yield();
+            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
+            await ConcurrentDefaultContextHandshake(client, server);
+            client.Dispose();
+            server.Dispose();
+        });
 
-        // [Benchmark]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // public Task ConcurrentDefaultHandshakeContextIPv6Async() => Spawn(ConcurrentTasks, async () =>
-        // {
-        //     (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
-        //     await DefaultContextHandshake(client, server);
-        //     client.Dispose();
-        //     server.Dispose();
-        // });
+        [Benchmark]
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentDefaultHandshakeContextIPv6Async() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        {
+            await Task.Yield();
+            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
+            await ConcurrentDefaultContextHandshake(client, server);
+            client.Dispose();
+            server.Dispose();
+        });
         
-        // [Benchmark]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // [ArgumentsSource(nameof(TlsProtocols))]
-        // public Task ConcurrentHandshakeContosoAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._cert, protocol));
-
-        // [Benchmark]
-        // [ArgumentsSource(nameof(TlsProtocols))]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // public Task ConcurrentHandshakeECDSA256CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._ec256Cert, protocol));
-
-        // [Benchmark]
-        // [ArgumentsSource(nameof(TlsProtocols))]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
-        // public Task ConcurrentHandshakeECDSA512CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._ec512Cert, protocol));
-
-        // [Benchmark]
-        // [ArgumentsSource(nameof(TlsProtocols))]
-        // [BenchmarkCategory(Categories.NoAOT)]
-        // public Task ConcurrentHandshakeRSA2048CertAsync(SslProtocols protocol) => Spawn(ConcurrentTasks, async () => await HandshakeAsync(SslStreamTests._rsa2048Cert, protocol));
+        [Benchmark]
+        [BenchmarkCategory(Categories.NoAOT)]
+        [ArgumentsSource(nameof(TlsProtocols))]
+        public Task ConcurrentHandshakeContosoAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        {
+            await Task.Yield();
+            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
+            //it should be ok to reuse the certificate in multiple threads.
+            await HandshakeAsync(SslStreamTests._cert, protocol);
+        });
 
         [Benchmark]
         [ArgumentsSource(nameof(TlsProtocols))]
-        public Task ConcurrentHandshakeRSA4096CertAsync(SslProtocols protocol) => Spawn(NumRequests, ConcurrentTasks, async () =>
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentHandshakeECDSA256CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
+            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
+            //it should be ok to reuse the certificate in multiple threads.
+            await HandshakeAsync(SslStreamTests._ec256Cert, protocol);
+        });
+
+        [Benchmark]
+        [ArgumentsSource(nameof(TlsProtocols))]
+        [BenchmarkCategory(Categories.NoAOT)]
+        [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
+        public Task ConcurrentHandshakeECDSA512CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        {
+            await Task.Yield();
+            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
+            //it should be ok to reuse the certificate in multiple threads.
+            await HandshakeAsync(SslStreamTests._ec512Cert, protocol);
+        });
+
+        [Benchmark]
+        [ArgumentsSource(nameof(TlsProtocols))]
+        [BenchmarkCategory(Categories.NoAOT)]
+        public Task ConcurrentHandshakeRSA2048CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        {
+            await Task.Yield();
+            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
+            //it should be ok to reuse the certificate in multiple threads.
+            await HandshakeAsync(SslStreamTests._rsa2048Cert, protocol);
+        });
+
+        [Benchmark]
+        [ArgumentsSource(nameof(TlsProtocols))]
+        public Task ConcurrentHandshakeRSA4096CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        {
+            await Task.Yield();
+            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
+            //it should be ok to reuse the certificate in multiple threads.
             await HandshakeAsync(SslStreamTests._rsa4096Cert, protocol);
         });
 
         private static async Task Spawn(int numRequests, int concurrentTasks, Func<Task> method)
         {
-            var _tasks = new Collections.Generic.List<Func<Task>>(concurrentTasks);
+            var _tasks = new Collections.Generic.List<Task>(concurrentTasks);
 
             for(int j = 0; j < numRequests; ++j)
             {
                 for(int i = 0; i < concurrentTasks; ++i)
                 {
-                    _tasks.Add(method);
+                    _tasks.Add(Task.Run(method));
                 }
 
-                await Task.WhenAll(_tasks.AsParallel().Select(async task => await task()));
+                await Task.WhenAll(_tasks);
 
                 _tasks.Clear();
             }
         }
+
+        private async Task ConcurrentDefaultContextHandshake(Stream client, Stream server)
+        {          
+            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
+            //it should be ok to reuse the certificate in multiple threads.
+            SslServerAuthenticationOptions serverOptions = new SslServerAuthenticationOptions
+            {
+                AllowRenegotiation = false,
+                EnabledSslProtocols = SslProtocols.None,
+                CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
+                ServerCertificateContext  = _certContext,
+            };
+
+            using (var sslClient = new SslStream(client, leaveInnerStreamOpen: true, delegate { return true; }))
+            using (var sslServer = new SslStream(server, leaveInnerStreamOpen: true, delegate { return true; }))
+            {
+                await Task.WhenAll(
+                    sslClient.AuthenticateAsClientAsync("localhost", null, SslProtocols.None, checkCertificateRevocation: false),
+                    sslServer.AuthenticateAsServerAsync(serverOptions, default));
+
+                // In Tls1.3 part of handshake happens with data exchange.
+                // To be consistent we do this extra step for all protocol versions
+                byte[] clientBuffer = new byte[1], serverBuffer = new byte[1];
+
+                await sslClient.WriteAsync(clientBuffer, default);
+                await sslServer.ReadAsync(serverBuffer, default);
+                await sslServer.WriteAsync(serverBuffer, default);
+                await sslClient.ReadAsync(clientBuffer, default);
+            }
+        }      
+
+        private async Task ConcurrentDefaultHandshake(Stream client, Stream server, bool requireClientCert = false)
+        {
+            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
+            //it should be ok to reuse the certificate in multiple threads.
+            SslClientAuthenticationOptions clientOptions = new SslClientAuthenticationOptions
+            {
+                AllowRenegotiation = false,
+                EnabledSslProtocols = SslProtocols.None,
+                CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
+                TargetHost = "loopback",
+                ClientCertificates = requireClientCert ? new X509CertificateCollection() { _clientCert } : null,
+            };
+
+            //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
+            //it should be ok to reuse the certificate in multiple threads.
+            SslServerAuthenticationOptions serverOptions = new SslServerAuthenticationOptions
+            {
+                AllowRenegotiation = false,
+                EnabledSslProtocols = SslProtocols.None,
+                CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
+                ServerCertificate = _cert,
+                ClientCertificateRequired = requireClientCert,
+            };
+
+            using (var sslClient = new SslStream(client, leaveInnerStreamOpen: true, delegate { return true; }))
+            using (var sslServer = new SslStream(server, leaveInnerStreamOpen: true, delegate { return true; }))
+            using (CancellationTokenSource cts = new CancellationTokenSource())
+            {
+                cts.CancelAfter(TimeSpan.FromSeconds(10));
+
+                await Task.WhenAll(
+                    sslClient.AuthenticateAsClientAsync(clientOptions, cts.Token),
+                    sslServer.AuthenticateAsServerAsync(serverOptions, cts.Token));
+
+                if ((int)sslClient.SslProtocol > (int)SslProtocols.Tls12)
+                {
+                    // In Tls1.3 part of handshake happens with data exchange.
+                    byte[] clientBuffer = new byte[1], serverBuffer = new byte[1];
+
+                    await sslClient.WriteAsync(clientBuffer, cts.Token);
+                    await sslServer.ReadAsync(serverBuffer, cts.Token);
+                    await sslServer.WriteAsync(serverBuffer, cts.Token);
+                    await sslClient.ReadAsync(clientBuffer, cts.Token);
+                }
+            }
+        }        
     }
 
     internal static class ConcurrentObjectProvider
@@ -148,8 +262,6 @@ namespace System.Net.Security.Tests
         private static Socket _listenerIPv6 = null;
 
         private const string _pipeName = "ConcurrentTlsHandshakePipe";
-
-        private static int pipeCount = 0;
 
         static ConcurrentObjectProvider()
         {
@@ -165,21 +277,25 @@ namespace System.Net.Security.Tests
         public static Tuple<NetworkStream, NetworkStream> CreateIPv4Pair()
         {
             var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            client.Connect(_listenerIPv4.LocalEndPoint);
 
+            //Based on MSDN https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?redirectedfrom=MSDN&view=net-7.0#:~:text=Thread%20Safety,are%20thread%20safe.
+            //_listenerIPv4 is thread-safe.
+            client.Connect(_listenerIPv4.LocalEndPoint);
             var server = _listenerIPv4.Accept();
 
             var clientIPv4 = new NetworkStream(client, ownsSocket: true);
             var serverIPv4 = new NetworkStream(server, ownsSocket: true);
-
+            
             return new Tuple<NetworkStream, NetworkStream>(clientIPv4, serverIPv4);
         }
 
         public static Tuple<NetworkStream, NetworkStream> CreateIPv6Pair()
         {
             var client = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+
+            //Based on MSDN https://learn.microsoft.com/en-us/dotnet/api/system.net.sockets.socket?redirectedfrom=MSDN&view=net-7.0#:~:text=Thread%20Safety,are%20thread%20safe.
+            //_listenerIPv6 is thread-safe.
             client.Connect(_listenerIPv6.LocalEndPoint);
-            
             Socket server = _listenerIPv6.Accept();
 
             var clientIPv6 = new NetworkStream(client, ownsSocket: true);
@@ -188,24 +304,20 @@ namespace System.Net.Security.Tests
             return new Tuple<NetworkStream, NetworkStream>(clientIPv6, serverIPv6);
         }
 
-        public static Tuple<PipeStream, PipeStream> CreatePipePair()
+        public static Tuple<NamedPipeClientStream, NamedPipeServerStream> CreatePipePair()
         {
-            var pipe = _pipeName + pipeCount++;
-
             var pipeServer = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
                                     PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
             
-            var pipeClient = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.WriteThrough);
+            var pipeClient = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous | PipeOptions.WriteThrough);         
 
-            Task.WaitAll(pipeServer.WaitForConnectionAsync(), pipeClient.ConnectAsync());
-
-            return new Tuple<PipeStream, PipeStream>(pipeClient, pipeServer);
+            return new Tuple<NamedPipeClientStream, NamedPipeServerStream>(pipeClient, pipeServer);
         }
 
         public static void Cleanup()
         {
             _listenerIPv4.Dispose();
             _listenerIPv6.Dispose();
-        }
+        }        
     }
 }
