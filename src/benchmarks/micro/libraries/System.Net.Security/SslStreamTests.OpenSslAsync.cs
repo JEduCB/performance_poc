@@ -69,7 +69,7 @@ namespace System.Net.Security.Tests
         [BenchmarkCategory(Categories.ThirdParty)]
         public Task DefaultHandshakeContextIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
             await ConcurrentDefaultContextHandshake(client, server);
             client.Dispose();
@@ -80,7 +80,7 @@ namespace System.Net.Security.Tests
         [BenchmarkCategory(Categories.ThirdParty)]
         public Task DefaultHandshakeContextIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
             await ConcurrentDefaultContextHandshake(client, server);
             client.Dispose();
@@ -91,7 +91,7 @@ namespace System.Net.Security.Tests
         [BenchmarkCategory(Categories.ThirdParty)]
         public Task DefaultHandshakeIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
             await ConcurrentDefaultHandshake(client, server);
             client.Dispose();
@@ -102,7 +102,7 @@ namespace System.Net.Security.Tests
         [BenchmarkCategory(Categories.ThirdParty)]
         public Task DefaultHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
             await ConcurrentDefaultHandshake(client, server);
             client.Dispose();
@@ -114,7 +114,7 @@ namespace System.Net.Security.Tests
         [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
         public Task DefaultHandshakePipeAsync_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             (NamedPipeClientStream client, NamedPipeServerStream server) = ConcurrentObjectProvider.CreatePipePair();
             await Task.WhenAll(server.WaitForConnectionAsync(), client.ConnectAsync());
             await ConcurrentDefaultHandshake(client, server);
@@ -126,7 +126,7 @@ namespace System.Net.Security.Tests
         [BenchmarkCategory(Categories.ThirdParty)]
         public Task DefaultMutualHandshakeIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks / 2, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
             await ConcurrentDefaultHandshake(client, server, requireClientCert: true);
             client.Dispose();
@@ -137,7 +137,7 @@ namespace System.Net.Security.Tests
         [BenchmarkCategory(Categories.ThirdParty)]
         public Task DefaultMutualHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks / 2, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
             await ConcurrentDefaultHandshake(client, server, requireClientCert: true);
             client.Dispose();
@@ -149,7 +149,7 @@ namespace System.Net.Security.Tests
         [ArgumentsSource(nameof(TlsProtocols))]
         public Task HandshakeContosoAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
             await HandshakeAsync(_cert, protocol);
@@ -160,7 +160,7 @@ namespace System.Net.Security.Tests
         [ArgumentsSource(nameof(TlsProtocols))]
         public Task HandshakeECDSA256CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
             await HandshakeAsync(_ec256Cert, protocol);
@@ -172,7 +172,7 @@ namespace System.Net.Security.Tests
         [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
         public Task HandshakeECDSA512CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
             await HandshakeAsync(SslStreamTests._cert, protocol);
@@ -183,7 +183,7 @@ namespace System.Net.Security.Tests
         [BenchmarkCategory(Categories.NoAOT)]
         public Task ConcurrentHandshakeECDSA256CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
             await HandshakeAsync(_rsa2048Cert, protocol);
@@ -194,7 +194,7 @@ namespace System.Net.Security.Tests
         [ArgumentsSource(nameof(TlsProtocols))]
         public Task HandshakeRSA4096CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            await Task.Yield();
+            //await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
             await HandshakeAsync(_rsa4096Cert, protocol);

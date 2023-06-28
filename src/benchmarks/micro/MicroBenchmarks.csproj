@@ -215,7 +215,7 @@
     <Compile Remove="libraries\System.Runtime.Intrinsics\*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' Or ('$(TargetFrameworkIdentifier)' == '.NETCoreApp' And '$(_TargetFrameworkVersionWithoutV)' &lt;= '8.0')">
+  <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETFramework' Or ('$(TargetFrameworkIdentifier)' == '.NETCoreApp' And '$(_TargetFrameworkVersionWithoutV)' &lt; '8.0')">
 	<Compile Remove="libraries\System.Text.Encoding\Perf.Ascii.cs" />
   </ItemGroup>
 
