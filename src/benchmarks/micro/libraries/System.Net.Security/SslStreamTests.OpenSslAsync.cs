@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;  
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
@@ -13,36 +15,94 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Extensions;
+using BenchmarkDotNet.Order;
+using BenchmarkDotNet.Parameters;
+using BenchmarkDotNet.Reports;
+using BenchmarkDotNet.Running;
 using MicroBenchmarks;
 
 namespace System.Net.Security.Tests
 {
+    [Config(typeof(Config))]
     public partial class SslStreamTests
     {
-        //Total handshakes will be IterationsCount * ConcurrentTasks
-        private const int IterationsCount = 100;
+        private class Config : ManualConfig
+        {
+            public Config() => Orderer = new AlternateJobsExecutionOrder();
+
+            private class AlternateJobsExecutionOrder : IOrderer
+            {
+                public IEnumerable<BenchmarkCase> GetExecutionOrder(ImmutableArray<BenchmarkCase> benchmarksCase, IEnumerable<BenchmarkLogicalGroupRule> order = null) =>
+                    from benchmark in benchmarksCase
+                    orderby benchmark.Descriptor.WorkloadMethodDisplayInfo ascending, benchmark.Parameters["protocol"], benchmark.Job.Id
+                    select benchmark;
+
+                public IEnumerable<BenchmarkCase> GetSummaryOrder(ImmutableArray<BenchmarkCase> benchmarksCase, Summary summary) =>
+                    from benchmark in benchmarksCase
+                    orderby benchmark.Descriptor.WorkloadMethodDisplayInfo ascending, benchmark.Parameters["protocol"], benchmark.Job.Id
+                    select benchmark;
+
+                public string GetHighlightGroupKey(BenchmarkCase benchmarkCase) => null;
+
+                public string GetLogicalGroupKey(ImmutableArray<BenchmarkCase> allBenchmarksCases, BenchmarkCase benchmarkCase) =>
+                    benchmarkCase.Descriptor.WorkloadMethodDisplayInfo;// + "_" + benchmarkCase.Job.Id;
+
+                public IEnumerable<IGrouping<string, BenchmarkCase>> GetLogicalGroupOrder(IEnumerable<IGrouping<string, BenchmarkCase>> logicalGroups,
+                    IEnumerable<BenchmarkLogicalGroupRule> order = null) =>
+                        logicalGroups.OrderBy(it => it.Key);
+
+                public bool SeparateLogicalGroups => true;
+            }
+        }
+
+        //Total handshakes will be Iterations Count * Concurrent Tasks
+        private const int IterationsCount = 10;
         private const int ConcurrentTasks = 500;
         private const int ConcurrentIpTasks = 250;
         private const int ConcurrentContextTasks = 750;
+
         private SslStreamCertificateContext _certContext = SslStreamCertificateContext.Create(Test.Common.Configuration.Certificates.GetServerCertificate(), null);
 
         [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
+        [BenchmarkCategory(Categories.ThirdParty)]
+        public Task ConcurrentDefaultHandshakeContextIPv4Async() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        {
+            await Task.Yield();
+            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
+            await ConcurrentDefaultContextHandshake(client, server);
+            client.Dispose();
+            server.Dispose();
+        });
+
+        [Benchmark]
+        [BenchmarkCategory(Categories.ThirdParty)]
+        public Task ConcurrentDefaultHandshakeContextIPv6Async() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        {
+            await Task.Yield();
+            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
+            await ConcurrentDefaultContextHandshake(client, server);
+            client.Dispose();
+            server.Dispose();
+        });
+
+        [Benchmark]
+        [BenchmarkCategory(Categories.ThirdParty)]
         public Task ConcurrentDefaultHandshakeIPv4Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
             await ConcurrentDefaultHandshake(client, server);
             client.Dispose();
-            server.Dispose();
+            server.Dispose();     
         });
 
         [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
+        [BenchmarkCategory(Categories.ThirdParty)]
         public Task ConcurrentDefaultHandshakeIPv6Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
             await ConcurrentDefaultHandshake(client, server);
             client.Dispose();
@@ -50,33 +110,11 @@ namespace System.Net.Security.Tests
         });
 
         [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultMutualHandshakeIPv4Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
-        {
-            //await Task.Yield();
-            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
-            await ConcurrentDefaultHandshake(client, server, requireClientCert: true);
-            client.Dispose();
-            server.Dispose();
-        });
-
-        [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultMutualHandshakeIPv6Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
-        {
-            //await Task.Yield();
-            (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
-            await ConcurrentDefaultHandshake(client, server, requireClientCert: true);
-            client.Dispose();
-            server.Dispose();
-        });
-        
-        [Benchmark]
+        [BenchmarkCategory(Categories.ThirdParty)]
         [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
-        [BenchmarkCategory(Categories.NoAOT)]
         public Task ConcurrentDefaultHandshakePipeAsync() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             (NamedPipeClientStream client, NamedPipeServerStream server) = ConcurrentObjectProvider.CreatePipePair();
             await Task.WhenAll(server.WaitForConnectionAsync(), client.ConnectAsync());
             await ConcurrentDefaultHandshake(client, server);
@@ -85,80 +123,81 @@ namespace System.Net.Security.Tests
         });
 
         [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultHandshakeContextIPv4Async() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        [BenchmarkCategory(Categories.ThirdParty)]
+        public Task ConcurrentDefaultMutualHandshakeIPv4Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
-            await ConcurrentDefaultContextHandshake(client, server);
+            await ConcurrentDefaultHandshake(client, server, requireClientCert: true);
             client.Dispose();
             server.Dispose();
         });
 
         [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentDefaultHandshakeContextIPv6Async() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        [BenchmarkCategory(Categories.ThirdParty)]
+        public Task ConcurrentDefaultMutualHandshakeIPv6Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
-            await ConcurrentDefaultContextHandshake(client, server);
+            await ConcurrentDefaultHandshake(client, server, requireClientCert: true);
             client.Dispose();
             server.Dispose();
         });
-        
+            
         [Benchmark]
-        [BenchmarkCategory(Categories.NoAOT)]
+        [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
         public Task ConcurrentHandshakeContosoAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
-            await HandshakeAsync(SslStreamTests._cert, protocol);
+            await HandshakeAsync(_cert, protocol);
         });
 
         [Benchmark]
+        [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        [BenchmarkCategory(Categories.NoAOT)]
         public Task ConcurrentHandshakeECDSA256CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
-            await HandshakeAsync(SslStreamTests._ec256Cert, protocol);
+            await HandshakeAsync(_ec256Cert, protocol);
         });
 
         [Benchmark]
+        [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        [BenchmarkCategory(Categories.NoAOT)]
         [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
         public Task ConcurrentHandshakeECDSA512CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
-            await HandshakeAsync(SslStreamTests._ec512Cert, protocol);
+            await HandshakeAsync(_ec512Cert, protocol);
         });
 
         [Benchmark]
+        [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        [BenchmarkCategory(Categories.NoAOT)]
         public Task ConcurrentHandshakeRSA2048CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
-            await HandshakeAsync(SslStreamTests._rsa2048Cert, protocol);
+            await HandshakeAsync(_rsa2048Cert, protocol);
         });
 
         [Benchmark]
+        [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
         public Task ConcurrentHandshakeRSA4096CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
-            //await Task.Yield();
+            await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
             //it should be ok to reuse the certificate in multiple threads.
-            await HandshakeAsync(SslStreamTests._rsa4096Cert, protocol);
+            await HandshakeAsync(_rsa4096Cert, protocol);
         });
 
         private static async Task Spawn(int numRequests, int concurrentTasks, Func<Task> method)
@@ -252,7 +291,7 @@ namespace System.Net.Security.Tests
                     await sslClient.ReadAsync(clientBuffer, cts.Token);
                 }
             }
-        }        
+        } 
     }
 
     internal static class ConcurrentObjectProvider
