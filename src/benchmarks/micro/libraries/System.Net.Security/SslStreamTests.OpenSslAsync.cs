@@ -58,10 +58,10 @@ namespace System.Net.Security.Tests
         }
 
         //Total handshakes will be Iterations Count * Concurrent Tasks
-        private const int IterationsCount = 10;
-        private const int ConcurrentTasks = 500;
-        private const int ConcurrentIpTasks = 250;
-        private const int ConcurrentContextTasks = 750;
+        private const int IterationsCount = 100;
+        private const int ConcurrentTasks = 200;//250;//500;
+        private const int ConcurrentIpTasks = 200;
+        private const int ConcurrentContextTasks = 200;//250;
 
         private SslStreamCertificateContext _certContext = SslStreamCertificateContext.Create(Test.Common.Configuration.Certificates.GetServerCertificate(), null);
 
@@ -181,8 +181,7 @@ namespace System.Net.Security.Tests
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        [BenchmarkCategory(Categories.NoAOT)]
-        public Task ConcurrentHandshakeECDSA256CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        public Task HandshakeRSA2048CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
