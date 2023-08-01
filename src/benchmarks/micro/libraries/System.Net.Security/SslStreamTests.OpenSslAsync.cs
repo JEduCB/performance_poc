@@ -217,7 +217,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task ConcurrentDefaultHandshakeIPv6Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
@@ -397,7 +397,7 @@ namespace System.Net.Security.Tests
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        public Task ConcurrentHandshakeRSA4096CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        public Task HandshakeRSA4096CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
