@@ -47,7 +47,7 @@ namespace System.Net.Security.Tests
                 public string GetHighlightGroupKey(BenchmarkCase benchmarkCase) => null;
 
                 public string GetLogicalGroupKey(ImmutableArray<BenchmarkCase> allBenchmarksCases, BenchmarkCase benchmarkCase) =>
-                    benchmarkCase.Descriptor.WorkloadMethodDisplayInfo;// + "_" + benchmarkCase.Job.Id;
+                    benchmarkCase.Descriptor.WorkloadMethodDisplayInfo + "_" + benchmarkCase.Parameters["protocol"];// + "_" + benchmarkCase.Job.Id;
 
                 public IEnumerable<IGrouping<string, BenchmarkCase>> GetLogicalGroupOrder(IEnumerable<IGrouping<string, BenchmarkCase>> logicalGroups,
                     IEnumerable<BenchmarkLogicalGroupRule> order = null) =>
@@ -58,16 +58,16 @@ namespace System.Net.Security.Tests
         }
 
         //Total handshakes will be Iterations Count * Concurrent Tasks
-        private const int IterationsCount = 10;
-        private const int ConcurrentTasks = 500;
-        private const int ConcurrentIpTasks = 250;
-        private const int ConcurrentContextTasks = 750;
+        private const int IterationsCount = 100;
+        private const int ConcurrentTasks = 200;//250;//500;
+        private const int ConcurrentIpTasks = 200;
+        private const int ConcurrentContextTasks = 200;//250;
 
         private SslStreamCertificateContext _certContext = SslStreamCertificateContext.Create(Test.Common.Configuration.Certificates.GetServerCertificate(), null);
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task ConcurrentDefaultHandshakeContextIPv4Async() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        public Task DefaultHandshakeContextIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
@@ -78,7 +78,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task ConcurrentDefaultHandshakeContextIPv6Async() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        public Task DefaultHandshakeContextIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
@@ -89,7 +89,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task ConcurrentDefaultHandshakeIPv4Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultHandshakeIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
@@ -100,7 +100,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task ConcurrentDefaultHandshakeIPv6Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
@@ -112,7 +112,7 @@ namespace System.Net.Security.Tests
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
         [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
-        public Task ConcurrentDefaultHandshakePipeAsync() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultHandshakePipeAsync_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
         {
             await Task.Yield();
             (NamedPipeClientStream client, NamedPipeServerStream server) = ConcurrentObjectProvider.CreatePipePair();
@@ -124,7 +124,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task ConcurrentDefaultMutualHandshakeIPv4Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultMutualHandshakeIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks / 2, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
@@ -135,7 +135,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task ConcurrentDefaultMutualHandshakeIPv6Async() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultMutualHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks / 2, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
@@ -147,7 +147,7 @@ namespace System.Net.Security.Tests
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        public Task ConcurrentHandshakeContosoAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        public Task HandshakeContosoAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
@@ -158,7 +158,7 @@ namespace System.Net.Security.Tests
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        public Task ConcurrentHandshakeECDSA256CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        public Task HandshakeECDSA256CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
@@ -170,7 +170,7 @@ namespace System.Net.Security.Tests
         [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
         [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
-        public Task ConcurrentHandshakeECDSA512CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        public Task HandshakeECDSA512CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
@@ -181,7 +181,7 @@ namespace System.Net.Security.Tests
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        public Task ConcurrentHandshakeRSA2048CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        public Task HandshakeRSA2048CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
@@ -192,7 +192,7 @@ namespace System.Net.Security.Tests
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
         [ArgumentsSource(nameof(TlsProtocols))]
-        public Task ConcurrentHandshakeRSA4096CertAsync(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
+        public Task HandshakeRSA4096CertAsync_Concurrent(SslProtocols protocol) => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             //Based on this comment https://github.com/dotnet/runtime/issues/87085#issuecomment-1575088839
