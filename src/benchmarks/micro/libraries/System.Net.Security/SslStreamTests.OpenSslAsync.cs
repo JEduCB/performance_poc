@@ -59,15 +59,13 @@ namespace System.Net.Security.Tests
 
         //Total handshakes will be Iterations Count * Concurrent Tasks
         private const int IterationsCount = 100;
-        private const int ConcurrentTasks = 200;//250;//500;
-        private const int ConcurrentIpTasks = 200;
-        private const int ConcurrentContextTasks = 200;//250;
-
-        private SslStreamCertificateContext _certContext = SslStreamCertificateContext.Create(Test.Common.Configuration.Certificates.GetServerCertificate(), null);
+        private const int ConcurrentTasks = 500;
+        private const int ConcurrentMutualTasks = 150;
+        //private SslStreamCertificateContext _certContext = SslStreamCertificateContext.Create(Test.Common.Configuration.Certificates.GetServerCertificate(), null);
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task DefaultHandshakeContextIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        public Task DefaultHandshakeContextIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
@@ -78,7 +76,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task DefaultHandshakeContextIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentContextTasks, async () =>
+        public Task DefaultHandshakeContextIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
@@ -89,7 +87,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task DefaultHandshakeIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultHandshakeIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
@@ -100,7 +98,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task DefaultHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
@@ -112,7 +110,7 @@ namespace System.Net.Security.Tests
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
         [OperatingSystemsFilter(allowed: true, platforms: OS.Linux)]    // Not supported on Windows at the moment.
-        public Task DefaultHandshakePipeAsync_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultHandshakePipeAsync_Concurrent() => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             (NamedPipeClientStream client, NamedPipeServerStream server) = ConcurrentObjectProvider.CreatePipePair();
@@ -124,7 +122,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task DefaultMutualHandshakeIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks / 2, async () =>
+        public Task DefaultMutualHandshakeIPv4Async_Concurrent() => Spawn(IterationsCount, ConcurrentMutualTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv4Pair();
@@ -135,7 +133,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task DefaultMutualHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks / 2, async () =>
+        public Task DefaultMutualHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentMutualTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
@@ -225,7 +223,8 @@ namespace System.Net.Security.Tests
                 AllowRenegotiation = false,
                 EnabledSslProtocols = SslProtocols.None,
                 CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
-                ServerCertificateContext  = _certContext,
+                //ServerCertificateContext = _certContext,
+                ServerCertificateContext = SslStreamCertificateContext.Create(Test.Common.Configuration.Certificates.GetServerCertificate(), null),
             };
 
             using (var sslClient = new SslStream(client, leaveInnerStreamOpen: true, delegate { return true; }))
