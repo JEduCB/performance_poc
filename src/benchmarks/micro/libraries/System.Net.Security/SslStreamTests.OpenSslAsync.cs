@@ -217,7 +217,7 @@ namespace System.Net.Security.Tests
 
         [Benchmark]
         [BenchmarkCategory(Categories.ThirdParty)]
-        public Task DefaultHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentIpTasks, async () =>
+        public Task DefaultHandshakeIPv6Async_Concurrent() => Spawn(IterationsCount, ConcurrentTasks, async () =>
         {
             await Task.Yield();
             (NetworkStream client, NetworkStream server) = ConcurrentObjectProvider.CreateIPv6Pair();
