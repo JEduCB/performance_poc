@@ -216,9 +216,4 @@
     <!-- Workaround https://github.com/dotnet/project-system/issues/935 -->
     <None Include="**/*.cs" />
   </ItemGroup>
-<<<<<<< HEAD
 </Project>
-=======
-
-</Project>
->>>>>>> Update concurrent micro POC
