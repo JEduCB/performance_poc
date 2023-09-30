@@ -4,7 +4,7 @@ cmd="dotnet run -c Release -f net8.0 --statisticalTest 5% --filter System.Net.Se
           --envVars DOTNET_PROCESSOR_COUNT:$core_count OPENSSL_ASYNC_ENABLED:1 QAT_ENGINE:QAT_HW
           --hide Job Toolchain InvocationCount UnrollFactor Gen0 Gen1 Gen2 \
           --coreRun "/home/user/git/innersource/dotnet.runtime.main/artifacts/bin/testhost/net9.0-linux-Release-x64/shared/Microsoft.NETCore.App/9.0.0/corerun" \
-                    "/home/user/git/innersource/dotnet.runtime.poc/artifacts/bin/testhost/net9.0-linux-Release-x64/shared/Microsoft.NETCore.App/9.0.0/corerun" \
+                    "/home/user/git/innersource/dotnet.runtime.poc1/artifacts/bin/testhost/net9.0-linux-Release-x64/shared/Microsoft.NETCore.App/9.0.0/corerun" \
           --apples --iterationCount 5"
 
 for core_count in "$@"
