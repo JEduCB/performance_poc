@@ -17,11 +17,9 @@
 #      "/home/user/git/innersource/dotnet.runtime.poc/artifacts/bin/testhost/net8.0-linux-Release-x64/shared/Microsoft.NETCore.App/8.0.0/corerun" --hide Job Toolchain --apples --iterationCount 5
 
 #LD_PRELOAD=/usr/lib/x86_64-linux-gnu/engines-1.1/libplock.so
-     sudo OPENSSL_ASYNC_ENABLED=1 QAT_ENGINE=QAT_HW \
-     dotnet run -c Release -f net8.0 --filter System.Net.Security.Tests.SslStreamTests.HandshakeRSA4096CertAsync_Concurrent \
-     --coreRun "/home/user/git/innersource/dotnet.runtime.poc/artifacts/bin/testhost/net9.0-linux-Release-x64/shared/Microsoft.NETCore.App/9.0.0/corerun" \
+OPENSSL_ASYNC_ENABLED=1 QAT_ENGINE=QAT_HW \
+     dotnet run -c Release -f net8.0 --filter System.Net.Security.Tests.SslStreamTests.HandshakeRSA2048CertAsync \
+     --coreRun "/home/user/git/innersource/dotnet.runtime.poc1/artifacts/bin/testhost/net9.0-linux-Release-x64/shared/Microsoft.NETCore.App/9.0.0/corerun" \
      --iterationCount 1
 
 #--filter System.Net.Security.Tests.SslStreamTests.HandshakeRSA2048CertAsync --coreRun "/home/user/git/innersource/dotnet.runtime.poc/artifacts/bin/testhost/net8.0-linux-Release-x64/shared/Microsoft.NETCore.App/8.0.0/corerun" --iterationCount 1
-
-

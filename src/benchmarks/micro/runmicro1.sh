@@ -11,5 +11,5 @@
      dotnet run -c Release -f net8.0 --statisticalTest $4 --filter System.Net.Security.Tests.SslStreamTests.$5 --apples --iterationCount $6 \
      --hide Job Toolchain InvocationCount UnrollFactor Gen0 Gen1 Gen2 \
      --coreRun "/home/user/git/innersource/dotnet.runtime.main/artifacts/bin/testhost/net9.0-linux-Release-x64/shared/Microsoft.NETCore.App/9.0.0/corerun" \
-               "/home/user/git/innersource/dotnet.runtime.poc/artifacts/bin/testhost/net9.0-linux-Release-x64/shared/Microsoft.NETCore.App/9.0.0/corerun" \
+               "/home/user/git/innersource/dotnet.runtime.poc1/artifacts/bin/testhost/net9.0-linux-Release-x64/shared/Microsoft.NETCore.App/9.0.0/corerun" \
 
