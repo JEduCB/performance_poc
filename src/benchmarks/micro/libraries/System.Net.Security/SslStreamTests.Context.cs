@@ -39,6 +39,7 @@ namespace System.Net.Security.Tests
             SslServerAuthenticationOptions serverOptions = new SslServerAuthenticationOptions
             {
                 AllowRenegotiation = false,
+                AllowTlsResume = false,
                 EnabledSslProtocols = SslProtocols.None,
                 CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
                 ServerCertificateContext  = _context,
