@@ -17,6 +17,7 @@ using MicroBenchmarks;
 namespace System.Net.Security.Tests
 {
     [BenchmarkCategory(Categories.Libraries, Categories.NoWASM)]
+//    [EventPipeProfiler(BenchmarkDotNet.Diagnosers.EventPipeProfile.CpuSampling)]
     public partial class SslStreamTests
     {
         private readonly Barrier _twoParticipantBarrier = new Barrier(2);
@@ -96,6 +97,8 @@ namespace System.Net.Security.Tests
             _serverIPv6.Dispose();
             _clientPipe.Dispose();
             _serverPipe.Dispose();
+
+            ConcurrentObjectProvider.Cleanup();
         }
 
         [Benchmark]
@@ -124,15 +127,18 @@ namespace System.Net.Security.Tests
             SslClientAuthenticationOptions clientOptions = new SslClientAuthenticationOptions
             {
                 AllowRenegotiation = false,
+                AllowTlsResume = false,
                 EnabledSslProtocols = SslProtocols.None,
                 CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
-                TargetHost = "loopback",
+                TargetHost = Guid.NewGuid().ToString(),
+//                TargetHost = "loopback",
                 ClientCertificates = requireClientCert ? new X509CertificateCollection() { _clientCert } : null,
             };
 
             SslServerAuthenticationOptions serverOptions = new SslServerAuthenticationOptions
             {
                 AllowRenegotiation = false,
+                AllowTlsResume = false,
                 EnabledSslProtocols = SslProtocols.None,
                 CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
                 ServerCertificate = _cert,
@@ -167,6 +173,7 @@ namespace System.Net.Security.Tests
             SslClientAuthenticationOptions clientOptions = new SslClientAuthenticationOptions
             {
                 AllowRenegotiation = false,
+                AllowTlsResume = false,
                 EnabledSslProtocols = sslProtocol,
                 CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
                 TargetHost = Guid.NewGuid().ToString(),
@@ -176,6 +183,7 @@ namespace System.Net.Security.Tests
             SslServerAuthenticationOptions serverOptions = new SslServerAuthenticationOptions
             {
                 AllowRenegotiation = false,
+                AllowTlsResume = false,
                 EnabledSslProtocols = sslProtocol,
                 CertificateRevocationCheckMode = X509RevocationMode.NoCheck,
                 ServerCertificate = certificate
